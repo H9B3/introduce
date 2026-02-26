@@ -1,0 +1,2431 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>H9B3 — Software Development Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700;800&family=Syne:wght@700;800&display=swap"
+          rel="stylesheet">
+    <style>
+        :root {
+            --bg: #07090e;
+            --bg2: #0c1018;
+            --bg3: #121924;
+            --border: rgba(255, 255, 255, 0.07);
+            --accent: #00ff88;
+            --blue: #38bdf8;
+            --orange: #fb923c;
+            --text: #e2e8f0;
+            --muted: #3d4a5c;
+            --muted2: #64748b;
+            --mono: 'JetBrains Mono', monospace;
+            --sans: 'Syne', sans-serif;
+        }
+
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--mono);
+            overflow-x: hidden;
+            cursor: none;
+        }
+
+        /* CURSOR */
+        #cur {
+            position: fixed;
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            mix-blend-mode: screen;
+        }
+
+        #cur-ring {
+            position: fixed;
+            width: 28px;
+            height: 28px;
+            border: 1px solid rgba(0, 255, 136, 0.35);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9998;
+            transition: width .25s, height .25s, border-color .25s, border-radius .25s;
+        }
+
+        /* SCANLINES */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0, 0, 0, 0.04) 3px, rgba(0, 0, 0, 0.04) 4px);
+            pointer-events: none;
+            z-index: 9000;
+        }
+
+        /* PROGRESS */
+        #progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 2px;
+            background: var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+            z-index: 9100;
+            width: 0%;
+            transition: width .08s;
+        }
+
+        /* NAV */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 500;
+            padding: 18px 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            background: rgba(7, 9, 14, 0.82);
+            backdrop-filter: blur(24px);
+        }
+
+        .logo {
+            font-family: var(--mono);
+            font-weight: 800;
+            font-size: 1.15rem;
+            color: var(--accent);
+            text-decoration: none;
+            letter-spacing: .04em;
+            cursor: none;
+        }
+
+        .logo em {
+            color: var(--muted2);
+            font-style: normal;
+            font-weight: 300;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 36px;
+        }
+
+        nav ul a {
+            color: var(--muted2);
+            text-decoration: none;
+            font-size: .72rem;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            transition: color .2s;
+            cursor: none;
+        }
+
+        nav ul a:hover {
+            color: var(--accent);
+        }
+
+        .nav-btn {
+            border: 1px solid rgba(0, 255, 136, 0.4);
+            color: var(--accent);
+            background: transparent;
+            padding: 8px 18px;
+            font-family: var(--mono);
+            font-size: .72rem;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            text-decoration: none;
+            transition: background .2s, color .2s;
+            cursor: none;
+        }
+
+        .nav-btn:hover {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        /* ══════════════════════════════════════
+           HERO
+        ══════════════════════════════════════ */
+        #hero {
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns:1fr 1fr;
+            align-items: center;
+            gap: 56px;
+            padding: 100px 56px 60px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* animated grid */
+        #hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(rgba(0, 255, 136, 0.022) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 136, 0.022) 1px, transparent 1px);
+            background-size: 64px 64px;
+            animation: gridMove 28s linear infinite;
+            will-change: background-position;
+        }
+
+        @keyframes gridMove {
+            to {
+                background-position: 64px 64px;
+            }
+        }
+
+        /* CANVAS for particles */
+        #particles {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        /* glows */
+        .h-glow1 {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(0, 255, 136, 0.06) 0%, transparent 65%);
+            left: -80px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        .h-glow2 {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.04) 0%, transparent 65%);
+            right: 100px;
+            top: 20%;
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        /* floating code snippets */
+        .h-float {
+            position: absolute;
+            font-size: .58rem;
+            color: rgba(0, 255, 136, 0.18);
+            pointer-events: none;
+            user-select: none;
+            white-space: nowrap;
+            will-change: transform;
+        }
+
+        .h-float.f1 {
+            top: 18%;
+            left: 55%;
+            animation: floatY 8s ease-in-out infinite;
+        }
+
+        .h-float.f2 {
+            bottom: 22%;
+            left: 52%;
+            animation: floatY 10s ease-in-out 2s infinite reverse;
+        }
+
+        .h-float.f3 {
+            top: 28%;
+            right: 3%;
+            animation: floatY 7s ease-in-out 1s infinite;
+            font-size: .5rem;
+            color: rgba(56, 189, 248, 0.15);
+        }
+
+        .h-float.f4 {
+            bottom: 35%;
+            right: 2%;
+            animation: floatY 9s ease-in-out 3s infinite;
+            font-size: .5rem;
+            color: rgba(251, 146, 60, 0.13);
+        }
+
+        @keyframes floatY {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-16px);
+            }
+        }
+
+        /* corner marks */
+        .h-corner {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            pointer-events: none;
+        }
+
+        .h-corner.tl {
+            top: 84px;
+            left: 40px;
+            border-top: 1px solid rgba(0, 255, 136, 0.25);
+            border-left: 1px solid rgba(0, 255, 136, 0.25);
+        }
+
+        .h-corner.tr {
+            top: 84px;
+            right: 40px;
+            border-top: 1px solid rgba(0, 255, 136, 0.25);
+            border-right: 1px solid rgba(0, 255, 136, 0.25);
+        }
+
+        .h-corner.bl {
+            bottom: 40px;
+            left: 40px;
+            border-bottom: 1px solid rgba(0, 255, 136, 0.25);
+            border-left: 1px solid rgba(0, 255, 136, 0.25);
+        }
+
+        .h-corner.br {
+            bottom: 40px;
+            right: 40px;
+            border-bottom: 1px solid rgba(0, 255, 136, 0.25);
+            border-right: 1px solid rgba(0, 255, 136, 0.25);
+        }
+
+        /* stat bar */
+        .h-stats {
+            position: absolute;
+            bottom: 32px;
+            left: 56px;
+            display: flex;
+            gap: 32px;
+            opacity: 0;
+            animation: fade .8s ease 1s forwards;
+        }
+
+        .h-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .h-stat-v {
+            font-family: var(--sans);
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--accent);
+            line-height: 1;
+        }
+
+        .h-stat-l {
+            font-size: .55rem;
+            color: var(--muted2);
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+
+        .hero-left {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: .62rem;
+            color: var(--accent);
+            letter-spacing: .18em;
+            text-transform: uppercase;
+            margin-bottom: 28px;
+            border: 1px solid rgba(0, 255, 136, 0.18);
+            padding: 5px 12px;
+            background: rgba(0, 255, 136, 0.04);
+            opacity: 0;
+            animation: up .7s cubic-bezier(.16, 1, .3, 1) .1s forwards;
+        }
+
+        .badge-dot {
+            width: 5px;
+            height: 5px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: blink 1.4s infinite;
+        }
+
+        .hero-title {
+            font-family: var(--sans);
+            font-size: clamp(3.4rem, 6.5vw, 6rem);
+            font-weight: 800;
+            line-height: .92;
+            letter-spacing: -.04em;
+            margin-bottom: 28px;
+            overflow: hidden;
+        }
+
+        .hero-title span {
+            display: block;
+            opacity: 0;
+            transform: translateY(105%);
+            animation: up .85s cubic-bezier(.16, 1, .3, 1) forwards;
+        }
+
+        .hero-title span:nth-child(1) {
+            animation-delay: .18s;
+        }
+
+        .hero-title span:nth-child(2) {
+            animation-delay: .31s;
+        }
+
+        .hero-sub {
+            font-size: .76rem;
+            color: var(--muted2);
+            line-height: 2;
+            margin-bottom: 20px;
+            max-width: 340px;
+            opacity: 0;
+            animation: fade .8s ease .55s forwards;
+        }
+
+        .hero-next {
+            font-family: var(--sans);
+            font-size: clamp(.9rem, 1.4vw, 1.1rem);
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: .04em;
+            margin-bottom: 36px;
+            opacity: 0;
+            animation: fade .8s ease .7s forwards;
+        }
+
+        .hero-btns {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            opacity: 0;
+            animation: fade .8s ease .68s forwards;
+        }
+
+        .btn-g {
+            background: var(--accent);
+            color: var(--bg);
+            padding: 13px 28px;
+            font-family: var(--mono);
+            font-size: .75rem;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            text-decoration: none;
+            cursor: none;
+            transition: box-shadow .3s, transform .2s;
+            display: inline-block;
+        }
+
+        .btn-g:hover {
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.45);
+            transform: translateY(-2px);
+        }
+
+        .btn-o {
+            color: var(--muted2);
+            font-size: .72rem;
+            letter-spacing: .08em;
+            text-decoration: none;
+            border: 1px solid var(--border);
+            padding: 13px 20px;
+            transition: color .2s, border-color .2s;
+            cursor: none;
+        }
+
+        .btn-o:hover {
+            color: var(--text);
+            border-color: rgba(255, 255, 255, 0.18);
+        }
+
+        /* hero right */
+        .hero-right {
+            position: relative;
+            z-index: 1;
+            opacity: 0;
+            animation: fade .9s ease .28s forwards;
+        }
+
+        .terminal {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03), 0 40px 80px rgba(0, 0, 0, 0.7), 0 0 60px rgba(0, 255, 136, 0.05);
+            transition: box-shadow .3s;
+        }
+
+        .terminal:hover {
+            box-shadow: 0 0 0 1px rgba(0, 255, 136, 0.1), 0 40px 80px rgba(0, 0, 0, 0.7), 0 0 80px rgba(0, 255, 136, 0.08);
+        }
+
+        .term-bar {
+            background: var(--bg3);
+            padding: 11px 16px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            border-bottom: 1px solid var(--border);
+            user-select: none;
+        }
+
+        .tb {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+        }
+
+        .tb.r {
+            background: #ff5f57;
+        }
+
+        .tb.y {
+            background: #febc2e;
+        }
+
+        .tb.g {
+            background: #28c840;
+        }
+
+        .term-label {
+            margin-left: auto;
+            font-size: .6rem;
+            color: var(--muted);
+            letter-spacing: .12em;
+        }
+
+        #terminal-body {
+            padding: 18px 22px;
+            font-size: .71rem;
+            line-height: 1.85;
+            min-height: 300px;
+            max-height: 360px;
+            overflow-y: auto;
+        }
+
+        #terminal-body::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        #terminal-body::-webkit-scrollbar-thumb {
+            background: var(--muted);
+            border-radius: 2px;
+        }
+
+        .tl {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 1px;
+        }
+
+        .tp {
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+
+        .tc {
+            color: var(--text);
+        }
+
+        .to {
+            color: var(--muted2);
+            padding-left: 16px;
+            display: block;
+            margin-bottom: 1px;
+        }
+
+        .to.g {
+            color: var(--accent);
+        }
+
+        .to.b {
+            color: var(--blue);
+        }
+
+        .to.o {
+            color: var(--orange);
+        }
+
+        .to.blank {
+            height: 6px;
+        }
+
+        .term-hint {
+            font-size: .58rem;
+            color: var(--muted);
+            margin-top: 8px;
+            text-align: right;
+            letter-spacing: .08em;
+        }
+
+        #term-input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-family: var(--mono);
+            font-size: .71rem;
+            flex: 1;
+            cursor: none;
+            caret-color: var(--accent);
+        }
+
+        /* ══════════════════════════════════════
+           SECTIONS
+        ══════════════════════════════════════ */
+        section:not(#hero) {
+            padding: 100px 56px;
+        }
+
+        .s-label {
+            font-size: .6rem;
+            color: var(--accent);
+            letter-spacing: .2em;
+            text-transform: uppercase;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .s-label .sn {
+            color: var(--muted);
+        }
+
+        .s-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+            max-width: 140px;
+        }
+
+        .s-title {
+            font-family: var(--sans);
+            font-size: clamp(2rem, 3.5vw, 3rem);
+            font-weight: 800;
+            letter-spacing: -.03em;
+            line-height: 1.05;
+            margin-bottom: 44px;
+        }
+
+        /* SERVICES */
+        #services {
+            background: var(--bg2);
+            border-top: 1px solid var(--border);
+        }
+
+        .svc-icon {
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+        }
+
+        .svc-icon svg {
+            transition: filter .3s;
+        }
+
+        .svc-card:hover .svc-icon svg {
+            filter: drop-shadow(0 0 8px rgba(0, 255, 136, 0.5));
+        }
+
+        .svc-bars {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .svc-bar-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .svc-bar-row span {
+            font-size: .55rem;
+            color: var(--muted2);
+            letter-spacing: .06em;
+            width: 80px;
+            flex-shrink: 0;
+        }
+
+        .svc-bar {
+            flex: 1;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .svc-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent), rgba(0, 255, 136, .4));
+            border-radius: 2px;
+            transition: width 1.2s cubic-bezier(.16, 1, .3, 1);
+        }
+
+        .svc-card.on .svc-bar-fill {
+            width: var(--w);
+        }
+
+        .svc-grid {
+            display: grid;
+            grid-template-columns:repeat(3, 1fr);
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+        }
+
+        .svc-card {
+            background: var(--bg2);
+            padding: 42px 34px;
+            position: relative;
+            overflow: hidden;
+            transition: background .3s;
+            cursor: none;
+        }
+
+        .svc-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent), transparent);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform .4s cubic-bezier(.16, 1, .3, 1);
+        }
+
+        .svc-card:hover {
+            background: #0f1620;
+        }
+
+        .svc-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .svc-bg {
+            position: absolute;
+            right: -8px;
+            bottom: -18px;
+            font-family: var(--sans);
+            font-size: 6rem;
+            font-weight: 800;
+            color: transparent;
+            -webkit-text-stroke: 1px rgba(0, 255, 136, 0.05);
+            user-select: none;
+            pointer-events: none;
+            line-height: 1;
+            transition: -webkit-text-stroke-color .3s;
+        }
+
+        .svc-card:hover .svc-bg {
+            -webkit-text-stroke-color: rgba(0, 255, 136, .1);
+        }
+
+        .svc-tag {
+            font-size: .58rem;
+            color: var(--accent);
+            letter-spacing: .15em;
+            margin-bottom: 18px;
+            font-weight: 700;
+        }
+
+        .svc-name {
+            font-family: var(--sans);
+            font-size: 1.45rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 14px;
+        }
+
+        .svc-desc {
+            font-size: .71rem;
+            color: var(--muted2);
+            line-height: 1.85;
+            margin-bottom: 24px;
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .chip {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: var(--muted2);
+            font-size: .58rem;
+            padding: 3px 8px;
+            letter-spacing: .06em;
+            transition: border-color .2s;
+        }
+
+        .svc-card:hover .chip {
+            border-color: rgba(0, 255, 136, .12);
+        }
+
+        /* WHY */
+        .why-grid {
+            display: grid;
+            grid-template-columns:repeat(2, 1fr);
+            border: 1px solid var(--border);
+        }
+
+        .why-item {
+            padding: 52px 48px;
+            border-right: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+            cursor: none;
+            transition: background .35s;
+        }
+
+        .why-item:nth-child(2n) {
+            border-right: none;
+        }
+
+        .why-item:nth-child(3), .why-item:nth-child(4) {
+            border-bottom: none;
+        }
+
+        .why-item:hover {
+            background: rgba(0, 255, 136, 0.022);
+        }
+
+        .why-item::before {
+            content: attr(data-n);
+            position: absolute;
+            right: -4px;
+            bottom: -20px;
+            font-family: var(--sans);
+            font-size: 9rem;
+            font-weight: 800;
+            color: transparent;
+            -webkit-text-stroke: 1px rgba(255, 255, 255, 0.035);
+            line-height: 1;
+            pointer-events: none;
+            transition: -webkit-text-stroke-color .35s;
+        }
+
+        .why-item:hover::before {
+            -webkit-text-stroke-color: rgba(0, 255, 136, .08);
+        }
+
+        .why-item::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, var(--accent), rgba(0, 255, 136, 0));
+            transform: scaleY(0);
+            transform-origin: top;
+            transition: transform .4s cubic-bezier(.16, 1, .3, 1);
+        }
+
+        .why-item:hover::after {
+            transform: scaleY(1);
+        }
+
+        .why-num {
+            font-size: .58rem;
+            color: var(--accent);
+            letter-spacing: .2em;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .why-kicker {
+            font-size: .63rem;
+            color: var(--muted2);
+            letter-spacing: .06em;
+            margin-bottom: 8px;
+            font-style: italic;
+        }
+
+        .why-title {
+            font-family: var(--sans);
+            font-size: 1.4rem;
+            font-weight: 800;
+            margin-bottom: 14px;
+            letter-spacing: -.025em;
+            line-height: 1.1;
+        }
+
+        .why-desc {
+            font-size: .72rem;
+            color: var(--muted2);
+            line-height: 1.95;
+        }
+
+        .why-tag {
+            display: inline-block;
+            margin-top: 14px;
+            font-size: .58rem;
+            color: var(--accent);
+            letter-spacing: .12em;
+            border: 1px solid rgba(0, 255, 136, .2);
+            padding: 3px 10px;
+            background: rgba(0, 255, 136, .04);
+        }
+
+        .why-metric {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+            margin-top: 20px;
+            padding: 14px 16px;
+            background: rgba(0, 255, 136, 0.04);
+            border: 1px solid rgba(0, 255, 136, 0.1);
+        }
+
+        .why-count {
+            font-family: var(--sans);
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--accent);
+            line-height: 1;
+        }
+
+        .why-unit {
+            font-size: .62rem;
+            color: var(--muted2);
+            letter-spacing: .06em;
+        }
+
+        /* PROCESS */
+        #process {
+            background: var(--bg2);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .proc-steps {
+            display: grid;
+            grid-template-columns:repeat(4, 1fr);
+            gap: 0;
+            border: 1px solid var(--border);
+        }
+
+        .proc-step {
+            padding: 44px 36px;
+            border-right: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+            transition: background .3s;
+            cursor: default;
+        }
+
+        .proc-step:last-child {
+            border-right: none;
+        }
+
+        .proc-step:hover {
+            background: rgba(0, 255, 136, 0.015);
+        }
+
+        /* top progress line that fills on hover */
+        .proc-step::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent), rgba(0, 255, 136, .3));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform .5s cubic-bezier(.16, 1, .3, 1);
+        }
+
+        .proc-step:hover::before {
+            transform: scaleX(1);
+        }
+
+        /* big ghost step number bg */
+        .proc-step-bg {
+            position: absolute;
+            right: -10px;
+            bottom: -14px;
+            font-family: var(--sans);
+            font-size: 7rem;
+            font-weight: 800;
+            color: transparent;
+            -webkit-text-stroke: 1px rgba(255, 255, 255, 0.03);
+            line-height: 1;
+            pointer-events: none;
+            transition: -webkit-text-stroke-color .3s;
+        }
+
+        .proc-step:hover .proc-step-bg {
+            -webkit-text-stroke-color: rgba(0, 255, 136, .07);
+        }
+
+        .step-n {
+            font-size: .58rem;
+            color: var(--accent);
+            letter-spacing: .15em;
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+        }
+
+        .step-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--bg2);
+            border: 2px solid var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+            flex-shrink: 0;
+            transition: box-shadow .3s;
+        }
+
+        .proc-step:hover .step-dot {
+            box-shadow: 0 0 18px rgba(0, 255, 136, 0.8);
+        }
+
+        .step-title {
+            font-family: var(--sans);
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+            letter-spacing: -.02em;
+        }
+
+        .step-desc {
+            font-size: .71rem;
+            color: var(--muted2);
+            line-height: 1.95;
+            margin-bottom: 20px;
+        }
+
+        .step-detail {
+            font-size: .63rem;
+            color: var(--muted);
+            line-height: 1.8;
+            border-left: 2px solid rgba(0, 255, 136, .2);
+            padding-left: 12px;
+        }
+
+        .proc-connector {
+            display: block;
+            width: 100%;
+            height: 2px;
+            position: relative;
+            overflow: visible;
+            margin-bottom: 44px;
+        }
+
+        .proc-line {
+            stroke: rgba(0, 255, 136, 0.15);
+            stroke-width: 1;
+            stroke-dasharray: 6 4;
+            fill: none;
+        }
+
+        .proc-line-active {
+            stroke: var(--accent);
+            stroke-width: 1.5;
+            fill: none;
+            stroke-dashoffset: 1000;
+            stroke-dasharray: 1000;
+            transition: stroke-dashoffset 2s ease;
+        }
+
+        .proc-connector.on .proc-line-active {
+            stroke-dashoffset: 0;
+        }
+
+        /* PORTFOLIO */
+        .port-grid {
+            display: grid;
+            grid-template-columns:repeat(3, 1fr);
+            gap: 14px;
+        }
+
+        .port-card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            transition: transform .35s cubic-bezier(.16, 1, .3, 1), border-color .3s, box-shadow .35s;
+            cursor: none;
+        }
+
+        .port-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(0, 255, 136, .22);
+            box-shadow: 0 24px 50px rgba(0, 0, 0, 0.5), 0 0 24px rgba(0, 255, 136, .05);
+        }
+
+        .port-thumb {
+            height: 175px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pt1 {
+            background: linear-gradient(135deg, #0d1117, #162032);
+        }
+
+        .pt2 {
+            background: linear-gradient(135deg, #0d1117, #1a1028);
+        }
+
+        .pt3 {
+            background: linear-gradient(135deg, #0d1117, #0f1e1a);
+        }
+
+        .code-prev {
+            position: absolute;
+            inset: 0;
+            padding: 14px 18px;
+            font-size: .57rem;
+            line-height: 1.7;
+            color: var(--muted);
+            overflow: hidden;
+        }
+
+        .kw {
+            color: #c678dd;
+        }
+
+        .fn {
+            color: #61afef;
+        }
+
+        .st {
+            color: #98c379;
+        }
+
+        .cm {
+            color: #4a5568;
+        }
+
+        .nm {
+            color: #e06c75;
+        }
+
+        .port-grad {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, var(--bg2), transparent 55%);
+        }
+
+        .port-info {
+            padding: 18px 20px;
+        }
+
+        .port-type {
+            font-size: .57rem;
+            color: var(--accent);
+            letter-spacing: .15em;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .port-name {
+            font-family: var(--sans);
+            font-size: .95rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .port-desc {
+            font-size: .67rem;
+            color: var(--muted2);
+            line-height: 1.7;
+            margin-bottom: 12px;
+        }
+
+        /* CONTACT */
+        #contact {
+            background: var(--bg2);
+            border-top: 1px solid var(--border);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #contact::before {
+            content: '';
+            position: absolute;
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(0, 255, 136, 0.05) 0%, transparent 65%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        .contact-pre {
+            font-size: .62rem;
+            color: var(--accent);
+            letter-spacing: .2em;
+            text-transform: uppercase;
+            margin-bottom: 18px;
+            position: relative;
+        }
+
+        .contact-title {
+            font-family: var(--sans);
+            font-size: clamp(2.4rem, 4.5vw, 4.2rem);
+            font-weight: 800;
+            letter-spacing: -.03em;
+            line-height: 1.06;
+            margin-bottom: 18px;
+            position: relative;
+        }
+
+        .contact-sub {
+            font-size: .73rem;
+            color: var(--muted2);
+            line-height: 1.9;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .cta-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            color: var(--accent);
+            padding: 15px 34px;
+            font-family: var(--mono);
+            font-size: .8rem;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+            transition: color .3s;
+            cursor: none;
+        }
+
+        .cta-link::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--accent);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform .35s cubic-bezier(.16, 1, .3, 1);
+        }
+
+        .cta-link:hover {
+            color: var(--bg);
+        }
+
+        .cta-link:hover::before {
+            transform: scaleX(1);
+        }
+
+        .cta-link span {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* FOOTER */
+        footer {
+            padding: 34px 56px;
+            border-top: 1px solid var(--border);
+        }
+
+        .ft {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .ft-logo {
+            font-weight: 800;
+            font-size: 1rem;
+            color: var(--accent);
+        }
+
+        .ft-status {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: .63rem;
+            color: var(--muted2);
+        }
+
+        .ft-dot {
+            width: 5px;
+            height: 5px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: blink 2s infinite;
+        }
+
+        .ft-div {
+            height: 1px;
+            background: var(--border);
+            margin-bottom: 18px;
+        }
+
+        .ft-bottom {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .ft-biz {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            flex-wrap: wrap;
+            font-size: .6rem;
+            color: var(--muted);
+        }
+
+        .ft-sep {
+            opacity: .3;
+        }
+
+        .ft-mail {
+            color: var(--muted2);
+            text-decoration: none;
+            transition: color .2s;
+            cursor: none;
+        }
+
+        .ft-mail:hover {
+            color: var(--accent);
+        }
+
+        .ft-copy {
+            font-size: .6rem;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        .ft-legal {
+            display: flex;
+            gap: 14px;
+            margin-top: 14px;
+        }
+
+        .ft-legal a {
+            font-size: .6rem;
+            color: var(--muted);
+            text-decoration: none;
+            letter-spacing: .06em;
+            transition: color .2s;
+            cursor: none;
+        }
+
+        .ft-legal a:hover {
+            color: var(--accent);
+        }
+
+        /* ══════════════════════════════════════
+           MODAL
+        ══════════════════════════════════════ */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(7, 9, 14, 0.88);
+            backdrop-filter: blur(12px);
+            z-index: 8000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .3s;
+        }
+
+        .modal-backdrop.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            width: min(700px, 92vw);
+            max-height: 80vh;
+            border-radius: 6px;
+            overflow: hidden;
+            transform: translateY(20px) scale(.97);
+            transition: transform .35s cubic-bezier(.16, 1, .3, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-backdrop.open .modal {
+            transform: none;
+        }
+
+        .modal-header {
+            background: var(--bg3);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .modal-title {
+            font-size: .75rem;
+            color: var(--accent);
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--muted2);
+            font-family: var(--mono);
+            font-size: .8rem;
+            cursor: none;
+            padding: 4px 8px;
+            transition: color .2s;
+            letter-spacing: .05em;
+        }
+
+        .modal-close:hover {
+            color: var(--text);
+        }
+
+        .modal-body {
+            padding: 28px 32px;
+            overflow-y: auto;
+            line-height: 2;
+            font-size: .72rem;
+            color: var(--muted2);
+        }
+
+        .modal-body::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb {
+            background: var(--muted);
+            border-radius: 2px;
+        }
+
+        .modal-body h3 {
+            font-family: var(--sans);
+            font-size: .85rem;
+            color: var(--text);
+            margin: 24px 0 10px;
+            font-weight: 700;
+        }
+
+        .modal-body h3:first-child {
+            margin-top: 0;
+        }
+
+        .modal-body p {
+            margin-bottom: 12px;
+            color: var(--muted2);
+        }
+
+        .modal-body strong {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        /* terminal-style modal header bar */
+        .modal-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .md {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .md.r {
+            background: #ff5f57;
+        }
+
+        .md.y {
+            background: #febc2e;
+        }
+
+        .md.g {
+            background: #28c840;
+        }
+
+        /* ANIMATIONS */
+        @keyframes up {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fade {
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes blink {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0;
+            }
+        }
+
+        /* REVEAL */
+        .rv {
+            opacity: 0;
+            transform: translateY(22px);
+            transition: opacity .65s ease, transform .65s ease;
+        }
+
+        .rv.on {
+            opacity: 1;
+            transform: none;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 900px) {
+            nav {
+                padding: 14px 20px;
+            }
+
+            nav ul {
+                display: none;
+            }
+
+            #hero {
+                grid-template-columns:1fr;
+                padding: 88px 20px 80px;
+                gap: 36px;
+            }
+
+            .hero-right {
+                order: -1;
+            }
+
+            .h-float, .h-corner, .h-stats {
+                display: none;
+            }
+
+            section:not(#hero) {
+                padding: 70px 20px;
+            }
+
+            .svc-grid, .port-grid {
+                grid-template-columns:1fr;
+            }
+
+            .why-grid {
+                grid-template-columns:1fr;
+            }
+
+            .why-item:nth-child(n) {
+                border-right: none;
+            }
+
+            .proc-steps {
+                grid-template-columns:1fr 1fr;
+                border: none;
+                gap: 1px;
+                background: var(--border);
+            }
+
+            .proc-step {
+                border-right: none !important;
+            }
+
+            footer {
+                padding: 26px 20px;
+            }
+
+            .ft-bottom {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="progress"></div>
+<div id="cur"></div>
+<div id="cur-ring"></div>
+
+<!-- NAV -->
+<nav>
+    <a href="#" class="logo">H9B3<em>.dev</em></a>
+    <ul>
+        <li><a href="#services">Services</a></li>
+        <li><a href="#why">About</a></li>
+        <li><a href="#portfolio">Work</a></li>
+        <li><a href="#contact">Contact</a></li>
+    </ul>
+    <a href="#contact" class="nav-btn">문의하기</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+    <canvas id="particles"></canvas>
+    <div class="h-glow1" id="glow1"></div>
+    <div class="h-glow2" id="glow2"></div>
+
+    <!-- floating code snippets (parallax layers) -->
+    <div class="h-float f1" id="fl1">const ship = () =&gt; deploy();</div>
+    <div class="h-float f2" id="fl2">git push origin main</div>
+    <div class="h-float f3" id="fl3">npm run build ✓</div>
+    <div class="h-float f4" id="fl4">$ flutter pub get</div>
+
+    <!-- corner brackets -->
+    <div class="h-corner tl"></div>
+    <div class="h-corner tr"></div>
+    <div class="h-corner bl"></div>
+    <div class="h-corner br"></div>
+
+    <!-- stat bar -->
+    <div class="h-stats">
+        <div class="h-stat"><span class="h-stat-v">3+</span><span class="h-stat-l">Years</span></div>
+        <div class="h-stat"><span class="h-stat-v">20+</span><span class="h-stat-l">Projects</span></div>
+        <div class="h-stat"><span class="h-stat-v">100%</span><span class="h-stat-l">Shipped</span></div>
+    </div>
+
+    <!-- LEFT -->
+    <div class="hero-left">
+        <div class="hero-badge"><span class="badge-dot"></span>Available for projects</div>
+        <h1 class="hero-title">
+            <span>Make it</span>
+            <span>obvious.</span>
+        </h1>
+        <p class="hero-sub">당연하지 않았던 걸, 당연하게.<br><br>지금 필요한 걸 만듭니다.<br>유행이 아니라, 실제로 쓰일 것.</p>
+        <p class="hero-next">We build what's next.</p>
+        <div class="hero-btns">
+            <a href="#contact" class="btn-g">프로젝트 시작</a>
+            <a href="#portfolio" class="btn-o">작업물 보기 →</a>
+        </div>
+    </div>
+
+    <!-- RIGHT — interactive terminal -->
+    <div class="hero-right">
+        <div class="terminal" id="term-wrap">
+            <div class="term-bar">
+                <div class="tb r"></div>
+                <div class="tb y"></div>
+                <div class="tb g"></div>
+                <span class="term-label">h9b3 ~ bash</span>
+            </div>
+            <div id="terminal-body"></div>
+        </div>
+        <p class="term-hint">// 클릭 후 명령어 입력 · help 로 시작</p>
+    </div>
+</section>
+
+<!-- SERVICES -->
+<section id="services">
+    <div class="s-label rv"><span class="sn">01</span> 서비스</div>
+    <h2 class="s-title rv">What we build.</h2>
+    <div class="svc-grid">
+        <div class="svc-card rv">
+            <div class="svc-bg">A</div>
+            <div class="svc-icon">
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="8" y="2" width="20" height="32" rx="3" stroke="var(--accent)" stroke-width="1.5"
+                          stroke-opacity="0.6"/>
+                    <rect x="11" y="6" width="14" height="18" rx="1" fill="rgba(0,255,136,0.06)"
+                          stroke="rgba(0,255,136,0.2)" stroke-width="1"/>
+                    <circle cx="18" cy="29" r="2" fill="rgba(0,255,136,0.4)"/>
+                    <line x1="13" y1="9" x2="23" y2="9" stroke="rgba(0,255,136,0.3)" stroke-width="1"/>
+                    <line x1="13" y1="12" x2="20" y2="12" stroke="rgba(0,255,136,0.2)" stroke-width="1"/>
+                </svg>
+            </div>
+            <div class="svc-tag">[ APP_DEV ]</div>
+            <h3 class="svc-name">앱 개발</h3>
+            <p class="svc-desc">iOS · Android · 크로스플랫폼.<br>아이디어를 앱스토어까지.</p>
+            <div class="svc-bars">
+                <div class="svc-bar-row"><span>iOS / Android</span>
+                    <div class="svc-bar">
+                        <div class="svc-bar-fill" style="--w:92%"></div>
+                    </div>
+                </div>
+                <div class="svc-bar-row"><span>Cross Platform</span>
+                    <div class="svc-bar">
+                        <div class="svc-bar-fill" style="--w:85%"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="chips"><span class="chip">Swift</span><span class="chip">Kotlin</span><span class="chip">React Native</span><span
+                    class="chip">Flutter</span></div>
+        </div>
+        <div class="svc-card rv">
+            <div class="svc-bg">W</div>
+            <div class="svc-icon">
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="2" y="5" width="32" height="22" rx="2" stroke="var(--accent)" stroke-width="1.5"
+                          stroke-opacity="0.6"/>
+                    <rect x="5" y="8" width="26" height="13" rx="1" fill="rgba(0,255,136,0.05)"
+                          stroke="rgba(0,255,136,0.15)" stroke-width="1"/>
+                    <line x1="14" y1="31" x2="22" y2="31" stroke="rgba(0,255,136,0.4)" stroke-width="2"
+                          stroke-linecap="round"/>
+                    <line x1="18" y1="27" x2="18" y2="31" stroke="rgba(0,255,136,0.3)" stroke-width="1.5"/>
+                    <line x1="7" y1="11" x2="15" y2="11" stroke="rgba(0,255,136,0.3)" stroke-width="1"/>
+                    <line x1="7" y1="14" x2="22" y2="14" stroke="rgba(0,255,136,0.2)" stroke-width="1"/>
+                    <line x1="7" y1="17" x2="19" y2="17" stroke="rgba(0,255,136,0.15)" stroke-width="1"/>
+                </svg>
+            </div>
+            <div class="svc-tag">[ WEB_DEV ]</div>
+            <h3 class="svc-name">웹 개발</h3>
+            <p class="svc-desc">랜딩페이지부터 SaaS까지.<br>반응형 · 퍼포먼스 · SEO.</p>
+            <div class="svc-bars">
+                <div class="svc-bar-row"><span>Frontend</span>
+                    <div class="svc-bar">
+                        <div class="svc-bar-fill" style="--w:95%"></div>
+                    </div>
+                </div>
+                <div class="svc-bar-row"><span>Backend / API</span>
+                    <div class="svc-bar">
+                        <div class="svc-bar-fill" style="--w:88%"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="chips"><span class="chip">Next.js</span><span class="chip">React</span><span class="chip">TypeScript</span><span
+                    class="chip">AWS</span></div>
+        </div>
+        <div class="svc-card rv">
+            <div class="svc-bg">S</div>
+            <div class="svc-icon">
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="3" y="3" width="30" height="30" rx="2" stroke="var(--accent)" stroke-width="1.5"
+                          stroke-opacity="0.6"/>
+                    <line x1="3" y1="11" x2="33" y2="11" stroke="rgba(0,255,136,0.2)" stroke-width="1"/>
+                    <circle cx="7.5" cy="7" r="1.5" fill="rgba(255,95,87,0.7)"/>
+                    <circle cx="12" cy="7" r="1.5" fill="rgba(254,188,46,0.7)"/>
+                    <circle cx="16.5" cy="7" r="1.5" fill="rgba(40,200,64,0.7)"/>
+                    <line x1="7" y1="16" x2="14" y2="16" stroke="rgba(0,255,136,0.5)" stroke-width="1.2"/>
+                    <line x1="7" y1="20" x2="22" y2="20" stroke="rgba(56,189,248,0.4)" stroke-width="1.2"/>
+                    <line x1="7" y1="24" x2="18" y2="24" stroke="rgba(0,255,136,0.3)" stroke-width="1.2"/>
+                    <line x1="7" y1="28" x2="13" y2="28" stroke="rgba(251,146,60,0.4)" stroke-width="1.2"/>
+                </svg>
+            </div>
+            <div class="svc-tag">[ SW_DEV ]</div>
+            <h3 class="svc-name">소프트웨어</h3>
+            <p class="svc-desc">자동화 · API · 내부 툴.<br>비즈니스 문제를 코드로.</p>
+            <div class="svc-bars">
+                <div class="svc-bar-row"><span>Automation</span>
+                    <div class="svc-bar">
+                        <div class="svc-bar-fill" style="--w:90%"></div>
+                    </div>
+                </div>
+                <div class="svc-bar-row"><span>API / Infra</span>
+                    <div class="svc-bar">
+                        <div class="svc-bar-fill" style="--w:82%"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="chips"><span class="chip">Python</span><span class="chip">REST API</span><span class="chip">Electron</span><span
+                    class="chip">CLI</span></div>
+        </div>
+    </div>
+</section>
+
+<!-- WHY -->
+<section id="why">
+    <div class="s-label rv"><span class="sn">02</span> 강점</div>
+    <h2 class="s-title rv">Why H9B3.</h2>
+    <div class="why-grid">
+        <div class="why-item rv" data-n="01">
+            <div class="why-num">// 01</div>
+            <div class="why-kicker">Communication</div>
+            <h4 class="why-title">직접 소통,<br>즉각 반영</h4>
+            <p class="why-desc">중간 단계 없이 담당자와 바로 연결됩니다. 요청한 내용이 회의 없이 바로 코드로 이어집니다.</p>
+            <div class="why-metric"><span class="why-count" data-target="24">0</span><span
+                    class="why-unit">hr 이내 응답</span></div>
+            <span class="why-tag">No middleman</span>
+        </div>
+        <div class="why-item rv" data-n="02">
+            <div class="why-num">// 02</div>
+            <div class="why-kicker">Cost Efficiency</div>
+            <h4 class="why-title">합리적인<br>비용 구조</h4>
+            <p class="why-desc">불필요한 오버헤드 없이 실력 있는 결과물을 합리적인 가격에. 숨겨진 비용 없는 투명한 견적.</p>
+            <div class="why-metric"><span class="why-count" data-target="0">0</span><span
+                    class="why-unit">숨겨진 추가 비용</span></div>
+            <span class="why-tag">Transparent pricing</span>
+        </div>
+        <div class="why-item rv" data-n="03">
+            <div class="why-num">// 03</div>
+            <div class="why-kicker">Full Ownership</div>
+            <h4 class="why-title">기획부터<br>배포까지</h4>
+            <p class="why-desc">아이디어 구체화, 설계, 개발, 배포, 유지보수. 모든 흐름을 한 곳에서 일관된 퀄리티로 책임집니다.</p>
+            <div class="why-metric"><span class="why-count" data-target="100">0</span><span
+                    class="why-unit">% 납품률</span></div>
+            <span class="why-tag">End-to-End</span>
+        </div>
+        <div class="why-item rv" data-n="04">
+            <div class="why-num">// 04</div>
+            <div class="why-kicker">Accountability</div>
+            <h4 class="why-title">이름을 걸고<br>납품합니다</h4>
+            <p class="why-desc">H9B3의 모든 결과물에는 책임이 따릅니다. 납품으로 끝나지 않고, 장기적인 파트너로 함께합니다.</p>
+            <div class="why-metric"><span class="why-count" data-target="20">0</span><span
+                    class="why-unit">+ 완료 프로젝트</span></div>
+            <span class="why-tag">Long-term partner</span>
+        </div>
+    </div>
+</section>
+
+<!-- PROCESS -->
+<section id="process">
+    <div class="s-label rv"><span class="sn">03</span> 프로세스</div>
+    <h2 class="s-title rv">How it works.</h2>
+    <svg class="proc-connector rv" height="2" viewBox="0 0 1000 2" preserveAspectRatio="none"
+         xmlns="http://www.w3.org/2000/svg">
+        <line class="proc-line" x1="0" y1="1" x2="1000" y2="1"/>
+        <line class="proc-line-active" x1="0" y1="1" x2="1000" y2="1"/>
+    </svg>
+    <div class="proc-steps">
+        <div class="proc-step rv">
+            <div class="proc-step-bg">01</div>
+            <div class="step-n"><span class="step-dot"></span>STEP 01</div>
+            <h4 class="step-title">상담</h4>
+            <p class="step-desc">프로젝트의 목표와 배경을 파악합니다. 규모와 형태에 관계없이 모든 문의를 환영합니다.</p>
+            <div class="step-detail">이메일 또는 화상 미팅<br>보통 24시간 이내 응답</div>
+        </div>
+        <div class="proc-step rv">
+            <div class="proc-step-bg">02</div>
+            <div class="step-n"><span class="step-dot"></span>STEP 02</div>
+            <h4 class="step-title">기획 & 견적</h4>
+            <p class="step-desc">개발 범위, 일정, 비용을 문서로 명확히 정리합니다. 숨겨진 비용 없는 투명한 견적.</p>
+            <div class="step-detail">기능 명세 · 와이어프레임<br>일정 계획 · 계약 체결</div>
+        </div>
+        <div class="proc-step rv">
+            <div class="proc-step-bg">03</div>
+            <div class="step-n"><span class="step-dot"></span>STEP 03</div>
+            <h4 class="step-title">개발</h4>
+            <p class="step-desc">정기적인 진행 업데이트와 함께 개발합니다. 중간 방향 조정도 유연하게 반영합니다.</p>
+            <div class="step-detail">주간 진행 보고<br>중간 피드백 반영</div>
+        </div>
+        <div class="proc-step rv">
+            <div class="proc-step-bg">04</div>
+            <div class="step-n"><span class="step-dot"></span>STEP 04</div>
+            <h4 class="step-title">런칭</h4>
+            <p class="step-desc">앱스토어 배포 또는 서버 런칭까지 완전히 책임집니다. 이후에도 운영을 함께합니다.</p>
+            <div class="step-detail">배포 · QA · 유지보수<br>장기 파트너십 가능</div>
+        </div>
+    </div>
+</section>
+
+<!-- PORTFOLIO -->
+<section id="portfolio">
+    <div class="s-label rv"><span class="sn">04</span> 포트폴리오</div>
+    <h2 class="s-title rv">Recent work.</h2>
+    <div class="port-grid">
+        <div class="port-card rv">
+            <div class="port-thumb pt1">
+                <div class="code-prev"><span class="kw">import</span> SwiftUI<br><span class="cm">// FitTrack</span><br><span
+                        class="kw">struct</span> <span class="fn">DashView</span>: View {<br>&nbsp;&nbsp;<span
+                        class="kw">@State var</span> steps: <span class="nm">Int</span><br>&nbsp;&nbsp;<span class="kw">var</span>
+                    body: some View {<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">RingChart</span>(steps)<br>&nbsp;&nbsp;}<br>}
+                </div>
+                <div class="port-grad"></div>
+            </div>
+            <div class="port-info">
+                <div class="port-type">iOS App</div>
+                <h4 class="port-name">FitTrack</h4>
+                <p class="port-desc">헬스 트래킹 · HealthKit · 위젯</p>
+                <div class="chips"><span class="chip">Swift</span><span class="chip">SwiftUI</span><span class="chip">HealthKit</span>
+                </div>
+            </div>
+        </div>
+        <div class="port-card rv">
+            <div class="port-thumb pt2">
+                <div class="code-prev"><span class="cm">// Analytics SaaS</span><br><span class="kw">const</span> <span
+                        class="fn">Board</span> = () => {<br>&nbsp;&nbsp;<span class="kw">const</span> data = <span
+                        class="fn">useLive</span>()<br>&nbsp;&nbsp;<span class="kw">return</span> (<br>&nbsp;&nbsp;&nbsp;&nbsp;&lt;<span
+                        class="nm">Chart</span><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;data={data}<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;realtime
+                    /&gt;<br>&nbsp;&nbsp;)<br>}
+                </div>
+                <div class="port-grad"></div>
+            </div>
+            <div class="port-info">
+                <div class="port-type">Web App</div>
+                <h4 class="port-name">Analytics Dashboard</h4>
+                <p class="port-desc">실시간 매출 분석 SaaS · 구독 기반</p>
+                <div class="chips"><span class="chip">Next.js</span><span class="chip">TypeScript</span><span
+                        class="chip">Supabase</span></div>
+            </div>
+        </div>
+        <div class="port-card rv">
+            <div class="port-thumb pt3">
+                <div class="code-prev"><span class="cm"># Data Pipeline</span><br><span class="kw">def</span> <span
+                        class="fn">run</span>():<br>&nbsp;&nbsp;df = <span class="fn">scrape</span>(src)<br>&nbsp;&nbsp;df
+                    = <span class="fn">transform</span>(df)<br>&nbsp;&nbsp;<span class="fn">upload</span>(df)<br>&nbsp;&nbsp;<span
+                            class="fn">notify</span>()<br><br>schedule.<span class="fn">daily</span>(run)
+                </div>
+                <div class="port-grad"></div>
+            </div>
+            <div class="port-info">
+                <div class="port-type">Automation</div>
+                <h4 class="port-name">Data Pipeline</h4>
+                <p class="port-desc">수집 → 정제 → 시트 자동화</p>
+                <div class="chips"><span class="chip">Python</span><span class="chip">Selenium</span><span class="chip">Google API</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+    <div class="contact-pre">// 프로젝트 문의</div>
+    <h2 class="contact-title rv">지금 필요한 개발자가 여기 있습니다.</h2>
+    <p class="contact-sub rv">규모 상관없이 환영합니다. 보통 24시간 이내 답변.</p>
+    <a href="mailto:hello@h9b3.com" class="cta-link rv"><span>→</span><span>hello@h9b3.com</span></a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    <div class="ft">
+        <div class="ft-logo">H9B3</div>
+        <div class="ft-status"><span class="ft-dot"></span> 현재 수주 가능</div>
+    </div>
+    <div class="ft-div"></div>
+    <div class="ft-bottom">
+        <div>
+            <div class="ft-biz">
+                <span>대표 윤한빈</span>
+                <span class="ft-sep">·</span>
+                <span>사업자번호 168-47-01085</span>
+                <span class="ft-sep">·</span>
+                <span>통신판매번호 2026-대전중구-0150</span>
+                <span class="ft-sep">·</span>
+                <a href="mailto:hello@h9b3.com" class="ft-mail">hello@h9b3.com</a>
+            </div>
+            <div class="ft-legal">
+                <a href="#" onclick="openModal('terms');return false;">이용약관</a>
+                <a href="#" onclick="openModal('privacy');return false;">개인정보처리방침</a>
+            </div>
+        </div>
+        <div class="ft-copy">© 2026 H9B3. All rights reserved.</div>
+    </div>
+</footer>
+
+<!-- MODAL: 이용약관 -->
+<div class="modal-backdrop" id="modal-terms" onclick="closeOnBack(event,'terms')">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-dots">
+                <div class="md r"></div>
+                <div class="md y"></div>
+                <div class="md g"></div>
+            </div>
+            <span class="modal-title">이용약관</span>
+            <button class="modal-close" onclick="closeModal('terms')">[ ESC ]</button>
+        </div>
+        <div class="modal-body">
+            <h3>제1조 (목적)</h3>
+            <p>본 약관은 H9B3(이하 "회사")가 제공하는 소프트웨어 개발 서비스의 이용과 관련하여 회사와 이용자 간의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.</p>
+
+            <h3>제2조 (정의)</h3>
+            <p><strong>서비스</strong>란 회사가 제공하는 앱 개발, 웹 개발, 소프트웨어 개발 및 이에 부수되는 일체의 용역을 의미합니다.</p>
+            <p><strong>이용자</strong>란 본 약관에 동의하고 회사의 서비스를 이용하는 개인 또는 법인을 말합니다.</p>
+
+            <h3>제3조 (약관의 효력 및 변경)</h3>
+            <p>본 약관은 서비스를 이용하고자 하는 모든 이용자에게 적용됩니다. 회사는 필요한 경우 약관을 변경할 수 있으며, 변경된 약관은 웹사이트를 통해 공지합니다.</p>
+
+            <h3>제4조 (서비스의 제공)</h3>
+            <p>회사는 이용자와의 계약에 따라 아래 서비스를 제공합니다.</p>
+            <p>① 모바일 앱 개발 (iOS, Android, 크로스플랫폼)<br>② 웹 개발 (프론트엔드, 백엔드, 풀스택)<br>③ 소프트웨어 개발 (자동화, API, 데스크탑 애플리케이션)</p>
+
+            <h3>제5조 (계약의 성립)</h3>
+            <p>서비스 이용 계약은 이용자의 프로젝트 의뢰 및 회사의 견적 승인 후 상호 합의된 계약서 작성으로 성립됩니다.</p>
+
+            <h3>제6조 (지식재산권)</h3>
+            <p>개발 결과물에 대한 저작권 및 지식재산권은 계약서에 별도 명시된 경우를 제외하고, 최종 대금 완납 후 이용자에게 이전됩니다. 회사는 포트폴리오 목적으로 작업물을 공개할 수 있습니다 (단,
+                비밀유지 계약 체결 시 제외).</p>
+
+            <h3>제7조 (대금 및 환불)</h3>
+            <p>서비스 대금은 계약서에 따르며, 착수금은 계약 체결 후 환불되지 않습니다. 단, 회사의 귀책사유로 인한 계약 불이행 시에는 환불 정책을 별도 협의합니다.</p>
+
+            <h3>제8조 (책임의 제한)</h3>
+            <p>회사는 천재지변, 이용자 측 귀책사유, 제3자 서비스의 장애 등 회사의 통제를 벗어난 사유로 인한 손해에 대해 책임을 지지 않습니다.</p>
+
+            <h3>제9조 (분쟁 해결)</h3>
+            <p>본 약관과 관련한 분쟁은 대한민국 법률에 따르며, 관할 법원은 대전지방법원으로 합니다.</p>
+
+            <h3>부칙</h3>
+            <p>본 약관은 2026년 1월 1일부터 시행됩니다.</p>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: 개인정보처리방침 -->
+<div class="modal-backdrop" id="modal-privacy" onclick="closeOnBack(event,'privacy')">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-dots">
+                <div class="md r"></div>
+                <div class="md y"></div>
+                <div class="md g"></div>
+            </div>
+            <span class="modal-title">개인정보처리방침</span>
+            <button class="modal-close" onclick="closeModal('privacy')">[ ESC ]</button>
+        </div>
+        <div class="modal-body">
+            <p><strong>H9B3</strong>(이하 “운영자”)는 이용자의 개인정보를 중요하게 생각하며 「개인정보 보호법」 등 관련 법령을 준수합니다. 본 방침은 H9B3 대표 웹사이트(이하
+                “사이트”)에서 처리되는 개인정보에 관한 사항을 안내합니다.</p>
+
+            <h3>1. 수집하는 개인정보 항목</h3>
+            <p>운영자는 회원가입, 결제, 뉴스레터 기능을 운영하지 않으며, 이용자로부터 직접 개인정보를 입력받아 수집하지 않습니다.</p>
+            <p>다만, 사이트 이용 과정에서 아래 정보가 자동으로 생성·수집될 수 있습니다.</p>
+            <p><strong>자동 수집:</strong> IP주소, 접속 일시, 브라우저/기기 정보, 쿠키 정보(보안/성능 목적)</p>
+            <p>또한 이용자가 사이트에 기재된 이메일로 직접 연락하는 경우, 이메일에 포함된 정보(이메일 주소, 문의 내용 등)는 이용자가 자발적으로 제공한 정보로서 문의 응대를 위해 사용됩니다.</p>
+
+            <h3>2. 개인정보의 이용 목적</h3>
+            <p>① 웹사이트 운영 및 보안 유지<br>
+                ② 비정상 접속 방지 및 서비스 안정성 확보<br>
+                ③ 이용자가 자발적으로 보낸 문의에 대한 응답</p>
+
+            <h3>3. 개인정보의 보유 및 이용 기간</h3>
+            <p>① 자동 수집 정보는 보안 및 서비스 운영 목적 범위 내에서 필요한 기간 동안 보관될 수 있습니다.<br>
+                ② 이메일 문의로 수신된 정보는 문의 대응 완료 후 지체 없이 삭제하거나, 분쟁 대응 등 필요한 경우에 한해 최소 기간 보관 후 파기합니다.</p>
+
+            <h3>4. 개인정보의 제3자 제공</h3>
+            <p>운영자는 이용자의 개인정보를 원칙적으로 제3자에게 제공하지 않습니다. 단, 법령에 의한 경우는 예외로 합니다.</p>
+
+            <h3>5. 개인정보 처리의 위탁 및 국외 이전</h3>
+            <p>운영자는 웹사이트 보안 및 성능 향상을 위해 <strong>Cloudflare, Inc.</strong>의 서비스를 이용할 수 있습니다. 이 과정에서 접속 정보(IP주소 등)가
+                Cloudflare의 해외 서버(미국 등)를 통해 처리·전송·저장될 수 있습니다.</p>
+            <p><strong>이전 항목:</strong> IP주소, 접속 정보 등<br>
+                <strong>이전 국가:</strong> 미국 등<br>
+                <strong>이전 목적:</strong> 보안(DDOS 방어 등), 트래픽 관리, 성능 최적화<br>
+                <strong>보유 기간:</strong> 서비스 제공 기간 또는 목적 달성 시까지</p>
+
+            <h3>6. 이용자의 권리</h3>
+            <p>이용자는 언제든지 개인정보의 열람, 정정, 삭제, 처리정지를 요청할 수 있습니다. 요청은 아래 이메일로 연락 바랍니다.</p>
+            <p><strong>문의:</strong>
+                <a href="mailto:hello@h9b3.com">hello@h9b3.com</a>
+            </p>
+
+            <h3>7. 쿠키(Cookie) 사용</h3>
+            <p>사이트는 별도의 마케팅/분석 목적 쿠키(예: Google Analytics)를 사용하지 않습니다. 다만, Cloudflare 등 보안/성능 제공 과정에서 쿠키가 사용될 수 있으며, 이용자는
+                브라우저 설정을 통해 쿠키 저장을 거부할 수 있습니다(일부 기능에 제한이 있을 수 있음).</p>
+
+            <h3>8. 개인정보보호 책임자</h3>
+            <p><strong>담당:</strong> 윤한빈(H9B3)<br>
+                <strong>이메일:</strong>
+                <a href="mailto:hello@h9b3.com">hello@h9b3.com</a>
+            </p>
+
+            <h3>9. 시행일</h3>
+            <p>본 방침은 <strong>2026년 1월 1일</strong>부터 시행됩니다.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ── CURSOR ──
+    const cur = document.getElementById('cur');
+    const ring = document.getElementById('cur-ring');
+    let mx = 0, my = 0, rx = 0, ry = 0;
+    document.addEventListener('mousemove', e => {
+        mx = e.clientX;
+        my = e.clientY;
+        cur.style.left = (mx - 3) + 'px';
+        cur.style.top = (my - 3) + 'px';
+    });
+    (function animR() {
+        rx += (mx - rx) * 0.11;
+        ry += (my - ry) * 0.11;
+        ring.style.left = (rx - 14) + 'px';
+        ring.style.top = (ry - 14) + 'px';
+        requestAnimationFrame(animR);
+    })();
+    document.querySelectorAll('a,button,.svc-card,.port-card,.why-item').forEach(el => {
+        el.addEventListener('mouseenter', () => {
+            ring.style.width = '44px';
+            ring.style.height = '44px';
+            ring.style.borderColor = 'rgba(0,255,136,0.6)';
+        });
+        el.addEventListener('mouseleave', () => {
+            ring.style.width = '28px';
+            ring.style.height = '28px';
+            ring.style.borderColor = 'rgba(0,255,136,0.35)';
+        });
+    });
+
+    // ── PROGRESS ──
+    window.addEventListener('scroll', () => {
+        const p = window.scrollY / (document.body.scrollHeight - window.innerHeight);
+        document.getElementById('progress').style.width = (p * 100) + '%';
+    }, {passive: true});
+
+    // ── REVEAL ──
+    const rvObs = new IntersectionObserver(es => {
+        es.forEach(e => {
+            if (!e.isIntersecting) return;
+            e.target.classList.add('on');
+
+            // svc bars
+            if (e.target.classList.contains('svc-card')) {
+                setTimeout(() => e.target.querySelectorAll('.svc-bar-fill').forEach(b => {
+                    b.style.width = b.style.getPropertyValue('--w') || getComputedStyle(b).getPropertyValue('--w');
+                }), 100);
+            }
+
+            // why counters
+            if (e.target.classList.contains('why-item')) {
+                e.target.querySelectorAll('.why-count').forEach(el => {
+                    const target = +el.dataset.target;
+                    const dur = 1400;
+                    const start = performance.now();
+                    const tick = now => {
+                        const p = Math.min((now - start) / dur, 1);
+                        const ease = 1 - Math.pow(1 - p, 3);
+                        el.textContent = Math.round(ease * target);
+                        if (p < 1) requestAnimationFrame(tick);
+                    };
+                    requestAnimationFrame(tick);
+                });
+            }
+
+            rvObs.unobserve(e.target);
+        });
+    }, {threshold: .15});
+    document.querySelectorAll('.rv').forEach(el => rvObs.observe(el));
+
+    // proc connector
+    const procObs = new IntersectionObserver(es => {
+        es.forEach(e => {
+            if (e.isIntersecting) {
+                e.target.classList.add('on');
+                procObs.unobserve(e.target);
+            }
+        });
+    }, {threshold: .3});
+    document.querySelectorAll('.proc-connector').forEach(el => procObs.observe(el));
+
+    // ── HERO PARALLAX ──
+    const glow1 = document.getElementById('glow1');
+    const glow2 = document.getElementById('glow2');
+    const fl1 = document.getElementById('fl1');
+    const fl2 = document.getElementById('fl2');
+    const fl3 = document.getElementById('fl3');
+    const fl4 = document.getElementById('fl4');
+
+    window.addEventListener('scroll', () => {
+        const sy = window.scrollY;
+        if (sy > window.innerHeight) return;
+        const p = sy / window.innerHeight;
+        // glows drift up faster
+        glow1.style.transform = `translateY(calc(-50% + ${sy * 0.35}px))`;
+        glow2.style.transform = `translateY(${sy * 0.2}px)`;
+        // floating snippets — different speeds
+        fl1.style.transform = `translateY(${-sy * 0.18}px)`;
+        fl2.style.transform = `translateY(${-sy * 0.28}px)`;
+        fl3.style.transform = `translateY(${-sy * 0.12}px)`;
+        fl4.style.transform = `translateY(${-sy * 0.22}px)`;
+        // hero content subtle drift
+        document.querySelector('.hero-left').style.transform = `translateY(${sy * 0.08}px)`;
+        document.querySelector('.hero-right').style.transform = `translateY(${sy * 0.12}px)`;
+    }, {passive: true});
+
+    // ── PARTICLE CANVAS ──
+    (function () {
+        const canvas = document.getElementById('particles');
+        const ctx = canvas.getContext('2d');
+        let W, H, particles = [];
+
+        function resize() {
+            W = canvas.width = canvas.offsetWidth;
+            H = canvas.height = canvas.offsetHeight;
+        }
+
+        resize();
+        window.addEventListener('resize', resize);
+
+        class P {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * W;
+                this.y = Math.random() * H;
+                this.r = Math.random() * 1.2 + 0.3;
+                this.vx = (Math.random() - .5) * 0.15;
+                this.vy = (Math.random() - .5) * 0.15;
+                this.a = Math.random() * 0.4 + 0.05;
+                this.life = 0;
+                this.maxLife = Math.random() * 300 + 200;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life++;
+                if (this.x < 0 || this.x > W || this.y < 0 || this.y > H || this.life > this.maxLife) this.reset();
+            }
+
+            draw() {
+                const alpha = this.a * Math.sin(Math.PI * this.life / this.maxLife);
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(0,255,136,${alpha})`;
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < 60; i++) particles.push(new P());
+
+        // lines between close particles
+        function drawLines() {
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 120) {
+                        const alpha = 0.04 * (1 - dist / 120);
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(0,255,136,${alpha})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function loop() {
+            ctx.clearRect(0, 0, W, H);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            drawLines();
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+    })();
+
+    // ── TERMINAL ──
+    const TB = document.getElementById('terminal-body');
+    let lines = [];
+    const CMDS = {
+        help: {
+            out: [
+                {c: '사용 가능한 명령어:', cls: 'g'},
+                {c: '  whoami   — H9B3 소개'},
+                {c: '  services — 서비스 목록'},
+                {c: '  stack    — 기술 스택'},
+                {c: '  contact  — 연락처'},
+                {c: '  status   — 현재 상태'},
+                {c: '  clear    — 초기화'},
+            ]
+        },
+        whoami: {
+            out: [
+                {c: 'H9B3 Software Development Studio', cls: 'g'},
+                {c: '앱 · 웹 · 소프트웨어 개발', cls: 'b'},
+                {c: '기획 → 개발 → 배포 · 대전, 대한민국'},
+            ]
+        },
+        services: {
+            out: [
+                {c: 'app_development/', cls: 'b'},
+                {c: '  iOS · Android · React Native · Flutter'},
+                {c: 'web_development/', cls: 'b'},
+                {c: '  Next.js · React · TypeScript · AWS'},
+                {c: 'software_development/', cls: 'b'},
+                {c: '  Python · REST API · Electron · CLI'},
+            ]
+        },
+        stack: {
+            out: [
+                {c: 'Frontend   React · Next.js · TypeScript · Swift · Kotlin', cls: 'b'},
+                {c: 'Backend    Node.js · Python · REST API · PostgreSQL'},
+                {c: 'Mobile     React Native · Flutter · SwiftUI'},
+                {c: 'Infra      AWS · Vercel · Docker'},
+            ]
+        },
+        contact: {
+            out: [
+                {c: 'hello@h9b3.com', cls: 'g'},
+                {c: '24시간 이내 답변 보장'},
+                {c: '사업자번호   168-47-01085'},
+                {c: '통판번호     2026-대전중구-0150'},
+            ]
+        },
+        status: {
+            out: [
+                {c: '● Available for new projects', cls: 'g'},
+                {c: '  상담 문의 환영 · 24hr 응답'},
+            ]
+        },
+    };
+
+    function esc(s) {
+        return String(s).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function render() {
+        TB.innerHTML = '';
+        lines.forEach(l => {
+            if (l.t === 'cmd') {
+                const d = document.createElement('div');
+                d.className = 'tl';
+                d.innerHTML = `<span class="tp">$</span><span class="tc"> ${esc(l.c)}</span>`;
+                TB.appendChild(d);
+            } else if (l.t === 'blank') {
+                const d = document.createElement('div');
+                d.className = 'to blank';
+                TB.appendChild(d);
+            } else {
+                const d = document.createElement('div');
+                d.className = `to ${l.cls || ''}`;
+                d.textContent = l.c;
+                TB.appendChild(d);
+            }
+        });
+        const wrap = document.createElement('div');
+        wrap.className = 'tl';
+        wrap.innerHTML = `<span class="tp">$</span>`;
+        const inp = document.createElement('input');
+        inp.id = 'term-input';
+        inp.placeholder = 'type a command...';
+        inp.style.cssText = 'background:transparent;border:none;outline:none;color:var(--text);font-family:var(--mono);font-size:.71rem;flex:1;cursor:none;caret-color:var(--accent);';
+        wrap.appendChild(inp);
+        TB.appendChild(wrap);
+        TB.scrollTop = TB.scrollHeight;
+        setTimeout(() => inp.focus(), 10);
+        inp.addEventListener('keydown', e => {
+            if (e.key !== 'Enter') return;
+            const val = inp.value.trim().toLowerCase();
+            lines.push({t: 'cmd', c: val || ' '});
+            if (!val) {
+                render();
+                return;
+            }
+            if (val === 'clear') {
+                lines = [];
+                render();
+                return;
+            }
+            const cmd = CMDS[val];
+            if (cmd) cmd.out.forEach(o => lines.push({t: 'out', ...o}));
+            else lines.push({t: 'out', c: `command not found: ${val}  (try 'help')`, cls: 'o'});
+            lines.push({t: 'blank'});
+            render();
+        });
+    }
+
+    const boot = [
+        {t: 'out', c: 'H9B3 Terminal v1.0', cls: 'g'},
+        {t: 'out', c: '[OK] system ready'},
+        {t: 'blank'},
+        {t: 'cmd', c: 'whoami'},
+        ...CMDS.whoami.out,
+        {t: 'blank'},
+        {t: 'cmd', c: 'help'},
+        ...CMDS.help.out,
+        {t: 'blank'},
+    ];
+    let bi = 0;
+    const delays = {cmd: 100, out: 25, blank: 10};
+
+    function bootNext() {
+        if (bi >= boot.length) {
+            render();
+            return;
+        }
+        const l = boot[bi++];
+        lines.push(l);
+        TB.innerHTML = '';
+        lines.forEach(ln => {
+            if (ln.t === 'cmd') {
+                const d = document.createElement('div');
+                d.className = 'tl';
+                d.innerHTML = `<span class="tp">$</span><span class="tc"> ${esc(ln.c)}</span>`;
+                TB.appendChild(d);
+            } else if (ln.t === 'blank') {
+                const d = document.createElement('div');
+                d.className = 'to blank';
+                TB.appendChild(d);
+            } else {
+                const d = document.createElement('div');
+                d.className = `to ${ln.cls || ''}`;
+                d.textContent = ln.c;
+                TB.appendChild(d);
+            }
+        });
+        TB.scrollTop = TB.scrollHeight;
+        setTimeout(bootNext, delays[l.t] || 25);
+    }
+
+    bootNext();
+    document.getElementById('term-wrap').addEventListener('click', () => {
+        const i = document.getElementById('term-input');
+        if (i) i.focus();
+    });
+
+    // ── MODAL ──
+    function openModal(id) {
+        document.getElementById('modal-' + id).classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal(id) {
+        document.getElementById('modal-' + id).classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    function closeOnBack(e, id) {
+        if (e.target === document.getElementById('modal-' + id)) closeModal(id);
+    }
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-backdrop.open').forEach(m => {
+                m.classList.remove('open');
+                document.body.style.overflow = '';
+            });
+        }
+    });
+</script>
+</body>
+</html>
